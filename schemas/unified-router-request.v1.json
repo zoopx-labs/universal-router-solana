@@ -1,0 +1,125 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://zoopx.xyz/schemas/unified-router-request.v1.json",
+  "title": "UnifiedRouterRequestV1",
+  "type": "object",
+  "required": [
+    "id",
+    "chainId",
+    "intent",
+    "router",
+    "authority",
+    "assetIn",
+    "amountIn"
+  ],
+  "properties": {
+    "id": { "type": "string", "minLength": 1 },
+    "chainId": { "type": "string", "minLength": 1, "description": "CAIP-2, e.g., solana:devnet" },
+    "intent": { "type": "string", "enum": ["bridge", "swap", "transfer"] },
+    "router": {
+      "type": "object",
+      "properties": {
+        "programId": { "type": "string" },
+        "contract": { "type": "string" },
+        "packageId": { "type": "string" },
+        "moduleId": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "authority": { "type": "string" },
+  "assetIn": { "$ref": "#/definitions/AssetRef" },
+  "assetOut": { "$ref": "#/definitions/AssetRef" },
+    "amountIn": { "type": "string", "pattern": "^[0-9]+$" },
+    "feeBps": { "type": "integer", "minimum": 0, "maximum": 10000 },
+    "deadline": { "type": "integer", "minimum": 0 },
+    "adapter": { "type": "string" },
+    "payload": { "type": "string" },
+  "solana": { "$ref": "#/definitions/SolanaExt" },
+  "evm": { "$ref": "#/definitions/EvmExt" },
+  "sui": { "$ref": "#/definitions/SuiExt" },
+  "aptos": { "$ref": "#/definitions/AptosExt" },
+    "nonce": { "type": "string", "pattern": "^[0-9]+$" },
+    "simulate": { "type": "boolean" }
+  },
+  "additionalProperties": false,
+  "definitions": {
+    "AssetRef": {
+      "type": "object",
+      "properties": {
+        "caip19": { "type": "string" },
+        "chainId": { "type": "string" },
+        "address": { "type": "string" },
+        "symbol": { "type": "string" },
+        "decimals": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+    "SolanaExt": {
+      "type": "object",
+      "properties": {
+        "accounts": {
+          "type": "object",
+          "properties": {
+            "fromTokenAccount": { "type": "string" },
+            "feeRecipientToken": { "type": "string" },
+            "cpiTargetTokenAccount": { "type": "string" },
+            "mint": { "type": "string" },
+            "remaining": {
+              "type": "array",
+              "items": { "type": "string" },
+              "maxItems": 16
+            }
+          },
+          "required": [
+            "fromTokenAccount",
+            "feeRecipientToken",
+            "cpiTargetTokenAccount",
+            "mint"
+          ],
+          "additionalProperties": false
+        },
+        "fees": {
+          "type": "object",
+          "properties": {
+            "protocolFee": { "type": "string", "pattern": "^[0-9]+$" },
+            "relayerFee": { "type": "string", "pattern": "^[0-9]+$" }
+          },
+          "additionalProperties": false
+        },
+        "dstChainId": { "type": "integer", "minimum": 0, "maximum": 65535 },
+        "nonce": { "type": "string", "pattern": "^[0-9]+$" },
+        "computeUnitLimit": { "type": "integer", "minimum": 0 },
+        "priorityFeeMicrolamports": { "type": "integer", "minimum": 0 }
+      },
+      "additionalProperties": false
+    },
+  "EvmExt": {
+      "type": "object",
+      "properties": {
+        "gasLimit": { "type": "string" },
+        "maxFeePerGas": { "type": "string" },
+        "maxPriorityFeePerGas": { "type": "string" },
+        "dataOverride": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+  "SuiExt": {
+      "type": "object",
+      "properties": {
+        "objects": { "type": "array", "items": { "type": "string" } },
+        "gasBudget": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+  "AptosExt": {
+      "type": "object",
+      "properties": {
+        "typeArguments": { "type": "array", "items": { "type": "string" } },
+        "arguments": { "type": "array" },
+        "gasUnitPrice": { "type": "string" },
+        "maxGasAmount": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  }
+}
