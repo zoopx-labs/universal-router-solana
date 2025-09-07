@@ -1,9 +1,6 @@
 # zoopx-router
 
 A universal bridge router supporting SPL Token and Token-2022 via Anchor `token_interface`.
-# zoopx-router
-
-A universal bridge router supporting SPL Token and Token-2022 via Anchor `token_interface`.
 
 ## Program IDs
 - Devnet Program ID: `654eeCFFpL9koVoFrAhRr1xmvMDq9BnjHYZgc3JxAmNf`
