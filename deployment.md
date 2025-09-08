@@ -11,6 +11,11 @@ This document records the current devnet deployment of the Anchor program and th
 - Upgrade authority wallet: ~/.config/solana/zoopx-devnet.json
 - ProgramData address: 3qVTtd6UMXrSJxuzc3fazzjVCwxhLSmFsHkuzRrynTxn
 - On-chain IDL: present (IDL account: 4QMiYVXRrRgrKWRJLaCrcPpL6DTvVQenijzYvHrrmp7C)
+- On-chain IDL: present (IDL account: 4QMiYVXRrRgrKWRJLaCrcPpL6DTvVQenijzYvHrrmp7C)
+
+- Config PDA (seed "zoopx_config"): FhpudAPCSpEyqD91QNcA6gDA2bDRinu2yWuwmdvVReok
+- Config initialized: true — fee_recipient set to 2QpAnre7Wjc8qWmKHyZBfb5Sda55CRrJh61d1oUALLrd
+- Init transaction: 7EJNiB2t4R9MuYCrgQSZVL6J6y99BpU5ktT8A5ZY5M9ptx3xK6UhateSGQjvTDsSBSzN862qSUWLkj5jugAhxAJ
 - Anchor CLI: 0.31.1
 - declare_id! in source: 654eeCFFpL9koVoFrAhRr1xmvMDq9BnjHYZgc3JxAmNf
 
@@ -87,6 +92,14 @@ Optional (governance hardening):
 # Remove the ability to modify the IDL account
 anchor idl erase-authority 654eeCFFpL9koVoFrAhRr1xmvMDq9BnjHYZgc3JxAmNf --provider.cluster devnet
 ```
+
+Local IDL copy
+
+The active on-chain IDL has been fetched and saved locally at `target/idl/zoopx_router.json`. Use this file for client generation or to re-upload with `anchor idl upgrade` if you change the interface.
+
+Note about initialization
+
+The program's config PDA (seed "zoopx_config") was uninitialized prior to the action recorded above; the config was initialized and the `fee_recipient` field was set to the address shown. No further on-chain initialization is required for the default config. To change the fee recipient later, run `scripts/set_fee_recipient.ts` or call `update_config` directly.
 
 ## Upgrading the program
 
