@@ -43,7 +43,8 @@ jobs:
       - name: Install Python deps for generator
         run: |
           python3 -m pip install --upgrade pip
-          python3 -m pip install pycryptodome pysha3
+          # prefer pycryptodome (pure wheel) — avoid building legacy pysha3 C extension on runner
+          python3 -m pip install pycryptodome
       - name: Generate golden vectors
         run: |
           python3 tools/generate_golden_vectors/generate.py > programs/zpx_router/tests/golden/hashes.json
