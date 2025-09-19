@@ -3,11 +3,13 @@
 #![forbid(unsafe_code)]
 #![deny(unused_must_use)]
 use anchor_lang::prelude::*;
-use anchor_lang::system_program::{self, CreateAccount};
 use anchor_spl::token::{self as token, Mint, Token, TokenAccount, TransferChecked};
 
 pub mod hash;
-use anchor_lang::solana_program::pubkey::Pubkey;
+use anchor_lang::solana_program::{
+    program::invoke_signed, pubkey::Pubkey, rent::Rent, system_instruction,
+};
+use anchor_lang::Discriminator;
 use hash::{global_route_id, keccak256, message_hash_be};
 
 declare_id!("Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY");
@@ -321,10 +323,11 @@ pub mod zpx_router {
     }
 
     /// Destination finalize path (stateless): mark message replay and emit telemetry.
-    /// No token movement. Creates a minimal PDA at [b"replay", message_hash] owned by this program.
+    /// No token movement. Creates a minimal 1-byte PDA at seeds (b"replay", message_hash) owned by this program.
     #[allow(clippy::too_many_arguments)]
     pub fn finalize_message_v1(
         ctx: Context<FinalizeMessageV1>,
+        message_hash: [u8; 32],
         src_chain_id: u64,
         dst_chain_id: u64,
         forwarded_amount: u64,
@@ -340,7 +343,7 @@ pub mod zpx_router {
         let asset_32 = asset_mint.to_bytes();
         let mut amount_be = [0u8; 32];
         amount_be[16..].copy_from_slice(&(forwarded_amount as u128).to_be_bytes());
-        let message_hash = message_hash_be(
+        let computed_hash = message_hash_be(
             src_chain_id,
             src_adapter_32,
             recipient_32,
@@ -357,66 +360,84 @@ pub mod zpx_router {
             ErrorCode::ChainIdOutOfRange
         );
 
-        // Recompute canonical message_hash (parity) and derive PDA; reject if mismatch
-        let recomputed = message_hash_be(
-            src_chain_id,
-            src_adapter_32,
-            recipient_32,
-            asset_32,
-            amount_be,
-            payload_hash,
-            nonce,
-            dst_chain_id,
-        );
-        require!(recomputed == message_hash, ErrorCode::Unauthorized);
+        // Ensure router is not paused at destination finalize
+        require!(!ctx.accounts.config.paused, ErrorCode::Paused);
 
-        // Derive PDA and ensure the provided account matches it
-        let (expected_pda, bump) =
-            Pubkey::find_program_address(&[b"replay", &message_hash], &crate::ID);
+        // Auth gate: make sure the declared source adapter is in the configured allowlist.
+        // This prevents arbitrary callers from forging finalize events for adapters that are
+        // not known/approved by the router config.
+        require!(
+            is_allowed_adapter_cfg(&ctx.accounts.config, &src_adapter),
+            ErrorCode::AdapterNotAllowed
+        );
+
+        // 1) Hash parity enforcement
+        require!(computed_hash == message_hash, ErrorCode::HashMismatch);
+
+        // 2) Manual replay PDA enforcement + stateful replay guard
+        // Seeds and expected PDA
+        let seeds: &[&[u8]] = &[b"replay", &message_hash];
+        let (expected_replay, bump) = Pubkey::find_program_address(seeds, ctx.program_id);
+        let replay_ai = &ctx.accounts.replay.to_account_info();
+        // Ensure provided account matches seeds
         require_keys_eq!(
-            ctx.accounts.replay.key(),
-            expected_pda,
-            ErrorCode::Unauthorized
+            replay_ai.key(),
+            expected_replay,
+            ErrorCode::InvalidReplayPda
         );
 
-        // If already initialized, this is a replay. Check owner and lamports to be robust
-        // across different runtime environments (some test harnesses may not expose
-        // the same lamports semantics). If the account is already owned by this
-        // program it was initialized previously.
-        let replay_info = ctx.accounts.replay.to_account_info();
-        // Debug: log owner & lamports for diagnosis. Remove in final cleanup.
-        msg!(
-            "DEBUG replay.owner={}, lamports={}",
-            replay_info.owner,
-            replay_info.lamports()
-        );
-        if replay_info.owner == &crate::ID || replay_info.lamports() > 0 {
-            msg!(
-                "DEBUG detected replay: owner={} lamports={}",
-                replay_info.owner,
-                replay_info.lamports()
+        // (Verbose diagnostics removed post-verification; keeping minimal branch logs below.)
+        if replay_ai.data_len() == 0 {
+            // First use: create PDA, write discriminator + processed=1
+            let space: usize = Replay::DISCRIMINATOR.len() + 1; // 8 + 1
+            let lamports = Rent::get()?.minimum_balance(space);
+            let create_ix = system_instruction::create_account(
+                &ctx.accounts.relayer.key(),
+                &expected_replay,
+                lamports,
+                space as u64,
+                ctx.program_id,
             );
-            return err!(ErrorCode::ReplayAlreadyUsed);
-        }
-
-        // Create minimal PDA owned by this program to mark replay. Allocate 1 byte and fund
-        // with the rent-exempt minimum for 1 byte so the account has non-zero lamports and
-        // can be detected on subsequent calls (lamports > 0).
-        let rent = Rent::get()?;
-        let lamports = rent.minimum_balance(1);
-        system_program::create_account(
-            CpiContext::new_with_signer(
-                ctx.accounts.system_program.to_account_info(),
-                CreateAccount {
-                    from: ctx.accounts.relayer.to_account_info(),
-                    to: ctx.accounts.replay.to_account_info(),
-                },
+            invoke_signed(
+                &create_ix,
+                &[
+                    ctx.accounts.relayer.to_account_info(),
+                    replay_ai.clone(),
+                    ctx.accounts.system_program.to_account_info(),
+                ],
                 &[&[b"replay", &message_hash, &[bump]]],
-            ),
-            lamports,
-            1,
-            &crate::ID,
-        )?;
+            )?;
+            let mut data = replay_ai.try_borrow_mut_data()?;
+            data[0..8].copy_from_slice(&Replay::DISCRIMINATOR);
+            data[8] = 1u8; // processed
+                           // Minimal trace for testing (can be removed later)
+            msg!("replay:create processed=1");
+        } else {
+            // Subsequent use: verify owner, layout, and processed flag
+            require_keys_eq!(
+                *replay_ai.owner,
+                *ctx.program_id,
+                ErrorCode::InvalidReplayOwner
+            );
+            let data = replay_ai.try_borrow_data()?;
+            // Need at least discriminator (8) + 1 byte flag
+            require!(
+                data.len() > Replay::DISCRIMINATOR.len(),
+                ErrorCode::ReplayAccountTooSmall
+            );
+            require!(
+                data[0..8] == Replay::DISCRIMINATOR,
+                ErrorCode::ReplayAccountTooSmall
+            );
+            // If already processed -> replay
+            if data[8] == 1 {
+                return err!(ErrorCode::ReplayAlreadyProcessed);
+            }
+            drop(data);
+            let mut data_mut = replay_ai.try_borrow_mut_data()?;
+            data_mut[8] = 1u8;
+            msg!("replay:mark processed=1");
+        }
 
         // Emit telemetry event (no fee movement in v1)
         emit!(FeeAppliedDest {
@@ -480,7 +501,7 @@ pub struct UpdateConfig<'info> {
 pub struct AdminConfig<'info> {
     #[account(mut)]
     pub authority: Signer<'info>,
-    #[account(seeds=[b"zpx_config"], bump=config.bump)]
+    #[account(mut, seeds=[b"zpx_config"], bump=config.bump)]
     pub config: Account<'info, Config>,
 }
 
@@ -513,15 +534,21 @@ pub struct BridgeWithAdapterCpi<'info> {
 }
 
 #[derive(Accounts)]
+#[instruction(message_hash: [u8; 32])]
 pub struct FinalizeMessageV1<'info> {
     #[account(mut)]
     pub relayer: Signer<'info>,
     #[account(seeds=[b"zpx_config"], bump=config.bump)]
     pub config: Account<'info, Config>,
-    /// CHECK: PDA to be created at [b"replay", message_hash]
+    /// CHECK: PDA verified & optionally created in handler
     #[account(mut)]
     pub replay: UncheckedAccount<'info>,
     pub system_program: Program<'info, System>,
+}
+
+#[account]
+pub struct Replay {
+    pub processed: u8,
 }
 
 /// SCHEMA FROZEN. Do not reorder/rename. Bump with V2 if changes are required.
@@ -689,12 +716,21 @@ pub enum ErrorCode {
     InvalidTokenProgram,
     #[msg("Chain id out of range for u16 emission")]
     ChainIdOutOfRange,
-    #[msg("Replay already used")]
-    ReplayAlreadyUsed,
     #[msg("Invalid fee recipient ATA")]
     InvalidFeeRecipientAta,
     #[msg("Placeholder program id used; replace with real id")]
     PlaceholderProgramId,
+    // New replay-guard specific errors
+    #[msg("Replay PDA does not match expected seeds")]
+    InvalidReplayPda,
+    #[msg("Replay account not owned by program")]
+    InvalidReplayOwner,
+    #[msg("Replay account too small")]
+    ReplayAccountTooSmall,
+    #[msg("Message has already been finalized (replay)")]
+    ReplayAlreadyProcessed,
+    #[msg("Computed hash mismatch")]
+    HashMismatch,
 }
 
 /// Compute and validate fees per caps; returns (forward_amount, total_fees)

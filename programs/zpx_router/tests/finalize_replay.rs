@@ -8,6 +8,7 @@
 use ::zpx_router as zpx_router_program;
 use ::zpx_router::hash::{keccak256, message_hash_be};
 use anchor_lang::prelude::*;
+use anchor_lang::Discriminator; // needed for Replay::DISCRIMINATOR
 use anchor_lang::ToAccountMetas;
 use solana_program_test::*;
 use solana_sdk::entrypoint::ProgramResult;
@@ -47,6 +48,8 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
     // Derive PDA used for replay flag
     let (replay_pda, _bump) =
         Pubkey::find_program_address(&[b"replay", &msg_hash], &zpx_router_program::ID);
+    println!("TEST-DEBUG msg_hash={:?}", msg_hash);
+    println!("TEST-DEBUG replay_pda={}", replay_pda);
 
     // Boot a program-test environment with the router program
     // wrapper to normalize the entry fn signature for ProgramTest expectations
@@ -119,6 +122,41 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
     ctx.banks_client.process_transaction(tx).await?;
 
     // Build instruction to call finalize_message_v1 directly via anchor client instruction construction
+    // First, add src_adapter to the config adapters list so finalize's allowlist check passes.
+    let add_accounts = zpx_router_program::accounts::AdminConfig {
+        authority: payer.pubkey(),
+        config: config_pda,
+    };
+    let add_ix = instruction::Instruction {
+        program_id: zpx_router_program::ID,
+        accounts: add_accounts.to_account_metas(None),
+        data: anchor_lang::InstructionData::data(&zpx_router_program::instruction::AddAdapter {
+            adapter: src_adapter,
+        }),
+    };
+    let tx_add = Transaction::new_signed_with_payer(
+        &[add_ix],
+        Some(&payer.pubkey()),
+        &[payer],
+        ctx.last_blockhash,
+    );
+    ctx.banks_client.process_transaction(tx_add).await?;
+
+    // Fetch and decode the config account to assert the adapter was recorded.
+    let cfg_acc = ctx
+        .banks_client
+        .get_account(config_pda)
+        .await?
+        .expect("config missing");
+    // Decode with Anchor's AccountDeserialize
+    use anchor_lang::AccountDeserialize;
+    let cfg: zpx_router_program::Config =
+        zpx_router_program::Config::try_deserialize(&mut cfg_acc.data.as_slice()).unwrap();
+    println!(
+        "DEBUG cfg.adapters_len={} adapter0={}",
+        cfg.adapters_len, cfg.adapters[0]
+    );
+
     let accounts = zpx_router_program::accounts::FinalizeMessageV1 {
         relayer: relayer.pubkey(),
         config: config_pda,
@@ -128,6 +166,7 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
 
     let ix_data =
         anchor_lang::InstructionData::data(&zpx_router_program::instruction::FinalizeMessageV1 {
+            message_hash: msg_hash,
             src_chain_id,
             dst_chain_id,
             forwarded_amount,
@@ -137,6 +176,7 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
             asset_mint,
             _initiator: initiator,
         });
+    println!("TEST-DEBUG ix_data_len={}", ix_data.len());
     let account_metas = accounts.to_account_metas(None);
     // (Debug output removed for CI stability)
     let instruction = instruction::Instruction {
@@ -172,11 +212,24 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
         ctx.banks_client.process_transaction(noop_tx).await?;
     }
     let replay_account = replay_account_opt.expect("replay account missing after retries");
-    let min = rent.minimum_balance(1);
+    let min = rent.minimum_balance(9);
     assert!(
         replay_account.lamports >= min,
         "replay not funded as expected"
     );
+    assert_eq!(
+        replay_account.owner,
+        zpx_router_program::ID,
+        "replay owner mismatch"
+    );
+    assert!(replay_account.data.len() >= 9, "replay data too small");
+    let expected_disc = zpx_router_program::Replay::discriminator();
+    assert_eq!(
+        &replay_account.data[0..8],
+        &expected_disc,
+        "discriminator mismatch"
+    );
+    assert_eq!(replay_account.data[8], 1u8, "processed flag not set");
 
     // Ensure the ledger state is committed and the runtime sees the created PDA.
     // Inject a tiny no-op transaction (transfer 1 lamport payer->payer) as a barrier.
@@ -191,6 +244,8 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
 
     // Second call should fail with ReplayAlreadyUsed. Rebuild the instruction so
     // account metas are regenerated and the runtime resolves the current account state.
+    // IMPORTANT: Refresh blockhash to avoid banks_client treating identical tx as duplicate (which would short-circuit execution).
+    ctx.last_blockhash = ctx.banks_client.get_latest_blockhash().await.unwrap();
     let account_metas2 = zpx_router_program::accounts::FinalizeMessageV1 {
         relayer: relayer.pubkey(),
         config: config_pda,
@@ -210,7 +265,21 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
         ctx.last_blockhash,
     );
     let res2 = ctx.banks_client.process_transaction(tx2).await;
-    assert!(res2.is_err(), "second finalize should fail due to replay");
+    match res2 {
+        Ok(_) => panic!("second finalize should fail due to replay"),
+        Err(BanksClientError::TransactionError(
+            solana_sdk::transaction::TransactionError::InstructionError(
+                _,
+                solana_sdk::instruction::InstructionError::Custom(code),
+            ),
+        )) => {
+            assert_eq!(
+                code, 6019,
+                "unexpected custom error code (expected ReplayAlreadyProcessed=6019)"
+            );
+        }
+        Err(e) => panic!("unexpected error variant: {:?}", e),
+    }
 
     Ok(())
 }

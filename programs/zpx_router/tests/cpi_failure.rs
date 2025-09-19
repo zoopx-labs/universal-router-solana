@@ -3,7 +3,6 @@
 use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
-use solana_sdk::system_program;
 use solana_sdk::{instruction, signature::Keypair, signer::Signer, transaction::Transaction};
 
 // Basic CPI failure test: router calls the adapter which returns an error; router should propagate
