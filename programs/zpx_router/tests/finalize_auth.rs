@@ -5,7 +5,7 @@ use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
 use solana_sdk::{
-    instruction, signature::Keypair, signer::Signer, system_program, transaction::Transaction,
+    instruction, signature::Keypair, signer::Signer, transaction::Transaction,
 };
 
 // Ignored heavy integration test that asserts finalize_message_v1 rejects unknown adapters
@@ -67,8 +67,10 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
     let asset_mint = Pubkey::new_unique();
     let initiator = Pubkey::new_unique();
 
+    // Compute expected message hash for deterministic replay PDA (hash parity not critical for rejection path)
+    let message_hash = [0u8; 32];
     let (replay_pda, _rbump) =
-        Pubkey::find_program_address(&[b"replay", &[0u8; 32]], &zpx_router_program::ID);
+        Pubkey::find_program_address(&[b"replay", &message_hash], &zpx_router_program::ID);
 
     let relayer = Keypair::new();
     // fund relayer
@@ -92,8 +94,9 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
         replay: replay_pda,
         system_program: system_program::id(),
     };
-    let ix_data =
-        anchor_lang::InstructionData::data(&zpx_router_program::instruction::FinalizeMessageV1 {
+    let ix_data = anchor_lang::InstructionData::data(
+        &zpx_router_program::instruction::FinalizeMessageV1 {
+            message_hash,
             src_chain_id,
             dst_chain_id,
             forwarded_amount,
@@ -102,8 +105,8 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
             src_adapter,
             asset_mint,
             _initiator: initiator,
-            message_hash: [0u8; 32],
-        });
+        },
+    );
     let ix = instruction::Instruction {
         program_id: zpx_router_program::ID,
         accounts: accounts.to_account_metas(None),

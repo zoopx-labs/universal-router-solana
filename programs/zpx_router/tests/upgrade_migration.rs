@@ -3,7 +3,7 @@
 use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
-use solana_sdk::system_program;
+// system_program imported via solana_sdk::system_program::id() not needed directly
 use solana_sdk::{instruction, signature::Keypair, signer::Signer, transaction::Transaction};
 
 // Simple upgrade/migration smoke test: deploy, init config, then simulate upgrade and
@@ -28,7 +28,7 @@ async fn upgrade_preserves_state() {
     let payer = Keypair::from_bytes(&ctx.payer.to_bytes()).expect("clone payer");
 
     let src_chain_id = 42u64;
-    let (config_pda, bump) =
+    let (config_pda, _bump) =
         Pubkey::find_program_address(&[b"zpx_config"], &zpx_router_program::ID);
     let init_accounts = zpx_router_program::accounts::InitializeConfig {
         payer: payer.pubkey(),

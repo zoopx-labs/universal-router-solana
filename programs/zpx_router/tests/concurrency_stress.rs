@@ -7,7 +7,7 @@ use anchor_lang::ToAccountMetas;
 use solana_program_test::*;
 use solana_sdk::entrypoint::ProgramResult;
 use solana_sdk::pubkey::Pubkey;
-use solana_sdk::system_program;
+// system_program imported for id() usage via solana_sdk path in code; direct import not required
 use solana_sdk::{
     instruction, signature::Keypair, signer::Signer, system_instruction, transaction::Transaction,
 };
