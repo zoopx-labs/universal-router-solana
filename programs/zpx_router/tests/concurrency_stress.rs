@@ -105,6 +105,29 @@ async fn concurrent_transfers_stress() {
     );
     process_tx(&mut ctx, tx).await;
 
+    // Pre-add a bounded set of adapters (<= 8 per config constraints) so finalize calls pass allowlist gate.
+    let adapters: Vec<Pubkey> = (0..4).map(|_| Pubkey::new_unique()).collect();
+    for adapter in adapters.iter() {
+        let add_accounts = zpx_router_program::accounts::AdminConfig {
+            authority: payer.pubkey(),
+            config: config_pda,
+        };
+        let add_ix = instruction::Instruction {
+            program_id: zpx_router_program::ID,
+            accounts: add_accounts.to_account_metas(None),
+            data: anchor_lang::InstructionData::data(&zpx_router_program::instruction::AddAdapter { adapter: *adapter }),
+        };
+        let prior_hash = ctx.last_blockhash;
+        let recent_blockhash = latest_blockhash_or(&mut ctx, prior_hash).await;
+        let add_tx = Transaction::new_signed_with_payer(
+            &[add_ix],
+            Some(&payer.pubkey()),
+            &[&payer],
+            recent_blockhash,
+        );
+        process_tx(&mut ctx, add_tx).await;
+    }
+
     let iterations = 200u64;
     // record message hashes so we can verify the exact PDA created for a given nonce
     let mut message_hashes: HashMap<u64, [u8; 32]> = HashMap::new();
@@ -115,7 +138,8 @@ async fn concurrent_transfers_stress() {
         let dst_chain_id = 2u64;
         let payload = vec![((nonce & 0xff) as u8)];
         let payload_hash = zpx_router_program::hash::keccak256(&[&payload]);
-        let src_adapter = Pubkey::new_unique();
+    // Choose a pre-allowed adapter deterministically
+    let src_adapter = adapters[(nonce as usize) % adapters.len()];
         let asset_mint = Pubkey::new_unique();
 
         // derive replay PDA for this nonce/message
@@ -142,18 +166,17 @@ async fn concurrent_transfers_stress() {
             replay: replay_pda,
             system_program: system_program::id(),
         };
-        let ix_data = anchor_lang::InstructionData::data(
-            &zpx_router_program::instruction::FinalizeMessageV1 {
-                src_chain_id,
-                dst_chain_id,
-                forwarded_amount,
-                nonce,
-                payload_hash,
-                src_adapter,
-                asset_mint,
-                _initiator: Pubkey::new_unique(),
-            },
-        );
+        let ix_data = anchor_lang::InstructionData::data(&zpx_router_program::instruction::FinalizeMessageV1 {
+            message_hash,
+            src_chain_id,
+            dst_chain_id,
+            forwarded_amount,
+            nonce,
+            payload_hash,
+            src_adapter,
+            asset_mint,
+            _initiator: Pubkey::new_unique(),
+        });
         let ix = instruction::Instruction {
             program_id: zpx_router_program::ID,
             accounts: accounts.to_account_metas(None),
@@ -161,7 +184,7 @@ async fn concurrent_transfers_stress() {
         };
         // get a fresh blockhash for each transaction to avoid replay/stale blockhash issues
         let fallback_hash = ctx.last_blockhash;
-        let recent_blockhash = latest_blockhash_or(&mut ctx, fallback_hash).await;
+    let recent_blockhash = latest_blockhash_or(&mut ctx, fallback_hash).await;
         let tx = Transaction::new_signed_with_payer(
             &[ix],
             Some(&payer.pubkey()),
