@@ -7,7 +7,7 @@
 #![cfg(feature = "program-test")]
 
 use solana_program_test::*;
-use solana_sdk::signature::Keypair;
+// Note: removed unused Keypair import (no key generation performed here)
 
 #[tokio::test]
 #[ignore]

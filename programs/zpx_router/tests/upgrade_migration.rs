@@ -4,7 +4,13 @@ use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
 // system_program imported via solana_sdk::system_program::id() not needed directly
-use solana_sdk::{instruction, signature::Keypair, signer::Signer, transaction::Transaction};
+use solana_sdk::{
+    instruction,
+    signature::Keypair,
+    signer::Signer,
+    transaction::Transaction,
+    system_program, // for system_program::id()
+};
 
 // Simple upgrade/migration smoke test: deploy, init config, then simulate upgrade and
 // verify config account is preserved.
@@ -19,7 +25,7 @@ async fn upgrade_preserves_state() {
         zpx_router_program::entry(program_id, accounts_coerced, input)
     }
 
-    let mut program = ProgramTest::new(
+    let program = ProgramTest::new(
         "zpx_router",
         zpx_router_program::ID,
         processor!(entry_wrapper),

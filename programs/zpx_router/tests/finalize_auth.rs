@@ -4,7 +4,13 @@
 use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
-use solana_sdk::{instruction, signature::Keypair, signer::Signer, transaction::Transaction};
+use solana_sdk::{
+    instruction,
+    signature::Keypair,
+    signer::Signer,
+    transaction::Transaction,
+    system_program, // needed for system_program::id()
+};
 
 // Ignored heavy integration test that asserts finalize_message_v1 rejects unknown adapters
 #[tokio::test]
@@ -19,7 +25,7 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
         zpx_router_program::entry(program_id, accounts_coerced, input)
     }
 
-    let mut program = ProgramTest::new(
+    let program = ProgramTest::new(
         "zpx_router",
         zpx_router_program::ID,
         processor!(entry_wrapper),

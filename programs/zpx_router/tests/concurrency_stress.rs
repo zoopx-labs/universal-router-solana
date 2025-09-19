@@ -7,6 +7,7 @@ use anchor_lang::ToAccountMetas;
 use solana_program_test::*;
 use solana_sdk::entrypoint::ProgramResult;
 use solana_sdk::pubkey::Pubkey;
+use solana_sdk::system_program; // needed for system_program::id()
 // system_program imported for id() usage via solana_sdk path in code; direct import not required
 use solana_sdk::{
     instruction, signature::Keypair, signer::Signer, system_instruction, transaction::Transaction,
@@ -136,10 +137,10 @@ async fn concurrent_transfers_stress() {
     for nonce in 0..iterations {
         // pick small forwarded_amount and payload
         let forwarded_amount = 1u64 + (nonce % 10);
-        let src_chain_id = 1u64;
-        let dst_chain_id = 2u64;
+    let src_chain_id = 1u64; // values constant across loop iterations
+    let dst_chain_id = 2u64; // values constant across loop iterations
         let payload = vec![((nonce & 0xff) as u8)];
-        let payload_hash = zpx_router_program::hash::keccak256(&[&payload]);
+    let payload_hash = zpx_router_program::hash::keccak256(&[&payload]);
         // Choose a pre-allowed adapter deterministically
         let src_adapter = adapters[(nonce as usize) % adapters.len()];
         let asset_mint = Pubkey::new_unique();
@@ -222,10 +223,10 @@ async fn concurrent_transfers_stress() {
     // Check a handful of PDAs exist (sample nonces)
     for nonce in [3u64, 37u64, 101u64].iter() {
         let forwarded_amount = 1u64 + (nonce % 10);
-        let src_chain_id = 1u64;
-        let dst_chain_id = 2u64;
+        let _src_chain_id = 1u64; // unused in sampling verification
+        let _dst_chain_id = 2u64; // unused in sampling verification
         let payload = vec![((*nonce & 0xff) as u8)];
-        let payload_hash = zpx_router_program::hash::keccak256(&[&payload]);
+        let _payload_hash = zpx_router_program::hash::keccak256(&[&payload]);
         // reuse the exact message hash recorded during the creation loop
         let message_hash = *message_hashes
             .get(nonce)

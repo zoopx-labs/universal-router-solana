@@ -71,11 +71,11 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
     // `system_instruction::create_account` would mark the new account as a required signer
     // (causing NotEnoughSigners), so we must use the program's init flow.
     let config_seed = b"zpx_config";
-    let (config_pda, config_bump) =
+    let (config_pda, _config_bump) =
         Pubkey::find_program_address(&[config_seed], &zpx_router_program::ID);
     // Create account data for config (small fixed size). We'll allocate and assign to the program.
     let rent = ctx.banks_client.get_rent().await.unwrap();
-    let config_space = 8 + 32 + 32 + 8 + 2 + 1 + (32 * 8) + 1 + 1;
+    let _config_space = 8 + 32 + 32 + 8 + 2 + 1 + (32 * 8) + 1 + 1;
     let payer = &ctx.payer;
 
     // Build and send the initialize_config instruction (program will `init` the PDA)
@@ -186,7 +186,7 @@ async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), T
     };
 
     let tx = Transaction::new_signed_with_payer(
-        &[instruction.clone()],
+        std::slice::from_ref(&instruction),
         Some(&payer.pubkey()),
         &[payer, &relayer],
         ctx.last_blockhash,
