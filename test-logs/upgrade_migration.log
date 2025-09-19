@@ -1,0 +1,87 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml
+workspace: /home/zoopx/zoopx/solana/Cargo.toml
+warning: /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml: Found `feature = ...` in `target.'cfg(...)'.dependencies`. This key is not supported for selecting dependencies and will not work as expected. Use the [features] section instead: https://doc.rust-lang.org/cargo/reference/features.html
+   Compiling zpx_router v0.1.0 (/home/zoopx/zoopx/solana/programs/zpx_router)
+warning: unused variable: `bump`
+  --> programs/zpx_router/tests/upgrade_migration.rs:23:22
+   |
+23 |     let (config_pda, bump) = Pubkey::find_program_address(&[b"zpx_config"], &zpx_router_program::ID);
+   |                      ^^^^ help: if this is intentional, prefix it with an underscore: `_bump`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+error[E0382]: borrow of moved value: `program`
+   --> programs/zpx_router/tests/upgrade_migration.rs:51:5
+    |
+18  |     let mut program = ProgramTest::new("zpx_router", zpx_router_program::ID, processor!(entry_wrapper));
+    |         ----------- move occurs because `program` has type `solana_program_test::ProgramTest`, which does not implement the `Copy` trait
+19  |     let mut ctx = program.start_with_context().await;
+    |                           -------------------- `program` moved due to this method call
+...
+51  |     program.add_program("zpx_router", zpx_router_program::ID, processor!(noop_entry));
+    |     ^^^^^^^ value borrowed here after move
+    |
+note: `solana_program_test::ProgramTest::start_with_context` takes ownership of the receiver `self`, which moves `program`
+   --> /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-program-test-1.18.26/src/lib.rs:913:41
+    |
+913 |     pub async fn start_with_context(mut self) -> ProgramTestContext {
+    |                                         ^^^^
+
+For more information about this error, try `rustc --explain E0382`.
+warning: `zpx_router` (test "upgrade_migration") generated 1 warning
+error: could not compile `zpx_router` (test "upgrade_migration") due to 1 previous error; 1 warning emitted
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml
+workspace: /home/zoopx/zoopx/solana/Cargo.toml
+warning: /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml: Found `feature = ...` in `target.'cfg(...)'.dependencies`. This key is not supported for selecting dependencies and will not work as expected. Use the [features] section instead: https://doc.rust-lang.org/cargo/reference/features.html
+   Compiling zpx_router v0.1.0 (/home/zoopx/zoopx/solana/programs/zpx_router)
+warning: unused variable: `bump`
+  --> programs/zpx_router/tests/upgrade_migration.rs:23:22
+   |
+23 |     let (config_pda, bump) = Pubkey::find_program_address(&[b"zpx_config"], &zpx_router_program::ID);
+   |                      ^^^^ help: if this is intentional, prefix it with an underscore: `_bump`
+   |
+   = note: `#[warn(unused_variables)]` on by default
+
+warning: variable does not need to be mutable
+  --> programs/zpx_router/tests/upgrade_migration.rs:18:9
+   |
+18 |     let mut program = ProgramTest::new("zpx_router", zpx_router_program::ID, processor!(entry_wrapper));
+   |         ----^^^^^^^
+   |         |
+   |         help: remove this `mut`
+   |
+   = note: `#[warn(unused_mut)]` on by default
+
+warning: `zpx_router` (test "upgrade_migration") generated 2 warnings (run `cargo fix --test "upgrade_migration"` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 22.07s
+warning: the following packages contain code that will be rejected by a future version of Rust: solana-client v1.18.26
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running tests/upgrade_migration.rs (target/debug/deps/upgrade_migration-85baf177e02bd1c1)
+
+running 1 test
+[2025-09-19T18:13:31.632210708Z INFO  solana_program_test] "zpx_router" builtin program
+[2025-09-19T18:13:31.790811612Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:13:31.790952086Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:13:31.791294567Z DEBUG solana_runtime::message_processor::stable_log] Program log: Instruction: InitializeConfig
+[2025-09-19T18:13:31.791431826Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [1]
+[2025-09-19T18:13:31.791562130Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 invoke [2]
+[2025-09-19T18:13:31.791640156Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+[2025-09-19T18:13:31.791664494Z DEBUG solana_runtime::message_processor::stable_log] Program 11111111111111111111111111111111 success
+data: KPHmegsTxsLt0C5UDyZZmNJZnp3cc3fwIW2bbwtNoF4JYEmSC/toiu3QLlQPJlmY0lmendxzd/AhbZtvC02gXglgSZIL+2iKKgAAAAAAAAAAAA==
+[2025-09-19T18:13:31.791748944Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY success
+[2025-09-19T18:13:31.791798790Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY success
+[2025-09-19T18:13:31.794330161Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:13:31.794400101Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:13:31.794570046Z DEBUG solana_runtime::message_processor::stable_log] Program log: Instruction: BridgeWithAdapterCpi
+[2025-09-19T18:13:31.794590352Z DEBUG solana_runtime::message_processor::stable_log] Program 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 invoke [1]
+[2025-09-19T18:13:31.794619537Z DEBUG solana_runtime::message_processor::stable_log] Account 11111112D1oxKts8YPdTJRG5FzxTNpMtWmq8hkVx3 is not executable
+
+thread 'solBankForksCli' panicked at /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/solana-program-test-1.18.26/src/lib.rs:262:14:
+called `Result::unwrap()` on an `Err` value: AccountNotExecutable
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+test upgrade_preserves_state ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.17s
+

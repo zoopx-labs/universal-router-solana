@@ -1,0 +1,132 @@
+[
+  {
+    "advisory_id": "RUSTSEC-2021-0139",
+    "package": "ansi_term",
+    "code": "unmaintained",
+    "message": "ansi_term is Unmaintained",
+    "severity": "error",
+    "parents": "ansi_term@0.12.1",
+    "classification": "accept-exception",
+    "rationale": "dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+  },
+  {
+    "advisory_id": "RUSTSEC-2021-0145",
+    "package": "atty",
+    "code": "unsound",
+    "message": "Potential unaligned read",
+    "severity": "error",
+    "parents": "atty@0.2.14",
+    "classification": "accept-exception",
+    "rationale": "dev-time crate; likely safe to accept with exception or replace"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0375",
+    "package": "atty",
+    "code": "unmaintained",
+    "message": "`atty` is unmaintained",
+    "severity": "error",
+    "parents": "atty@0.2.14",
+    "classification": "accept-exception",
+    "rationale": "dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+  },
+  {
+    "advisory_id": "RUSTSEC-2023-0033",
+    "package": "borsh",
+    "code": "unsound",
+    "message": "Parsing borsh messages with ZST which are not-copy/clone is unsound",
+    "severity": "error",
+    "parents": "borsh@0.9.3",
+    "classification": "upstream-required",
+    "rationale": "transitively introduced via Solana/Anchor stack"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0344",
+    "package": "curve25519-dalek",
+    "code": "vulnerability",
+    "message": "Timing variability in `curve25519-dalek`'s `Scalar29::sub`/`Scalar52::sub`",
+    "severity": "error",
+    "parents": "curve25519-dalek@3.2.1",
+    "classification": "upstream-required",
+    "rationale": "transitively introduced via Solana/Anchor stack"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0388",
+    "package": "derivative",
+    "code": "unmaintained",
+    "message": "`derivative` is unmaintained; consider using an alternative",
+    "severity": "error",
+    "parents": "derivative@2.2.0",
+    "classification": "accept-exception",
+    "rationale": "dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+  },
+  {
+    "advisory_id": "RUSTSEC-2022-0093",
+    "package": "ed25519-dalek",
+    "code": "vulnerability",
+    "message": "Double Public Key Signing Function Oracle Attack on `ed25519-dalek`",
+    "severity": "error",
+    "parents": "ed25519-dalek@1.0.1",
+    "classification": "upstream-required",
+    "rationale": "transitively introduced via Solana/Anchor stack"
+  },
+  {
+    "advisory_id": "RUSTSEC-2023-0042",
+    "package": "ouroboros",
+    "code": "unsound",
+    "message": "Ouroboros is Unsound",
+    "severity": "error",
+    "parents": "ouroboros@0.15.6",
+    "classification": "fix-locally",
+    "rationale": "appears to be directly addressable in workspace"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0436",
+    "package": "paste",
+    "code": "unmaintained",
+    "message": "paste - no longer maintained",
+    "severity": "error",
+    "parents": "paste@1.0.15",
+    "classification": "accept-exception",
+    "rationale": "dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0370",
+    "package": "proc-macro-error",
+    "code": "unmaintained",
+    "message": "proc-macro-error is unmaintained",
+    "severity": "error",
+    "parents": "proc-macro-error@1.0.4",
+    "classification": "accept-exception",
+    "rationale": "dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+  },
+  {
+    "advisory_id": "RUSTSEC-2025-0009",
+    "package": "ring",
+    "code": "vulnerability",
+    "message": "Some AES functions may panic when overflow checking is enabled.",
+    "severity": "error",
+    "parents": "ring@0.16.20",
+    "classification": "upstream-required",
+    "rationale": "transitively introduced via Solana/Anchor stack"
+  },
+  {
+    "advisory_id": "RUSTSEC-2025-0010",
+    "package": "ring",
+    "code": "unmaintained",
+    "message": "Versions of *ring* prior to 0.17 are unmaintained.",
+    "severity": "error",
+    "parents": "ring@0.16.20",
+    "classification": "upstream-required",
+    "rationale": "transitively introduced via Solana/Anchor stack"
+  },
+  {
+    "advisory_id": null,
+    "package": null,
+    "code": "summary",
+    "message": "",
+    "severity": null,
+    "parents": "",
+    "classification": "accept-exception",
+    "rationale": "low-impact or informational; accept with documented justification"
+  }
+]

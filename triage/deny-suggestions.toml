@@ -1,0 +1,31 @@
+[[exceptions]]
+package = "ansi_term"
+reason = "Accept temporary exception for RUSTSEC-2021-0139: dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "atty"
+reason = "Accept temporary exception for RUSTSEC-2021-0145: dev-time crate; likely safe to accept with exception or replace"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "atty"
+reason = "Accept temporary exception for RUSTSEC-2024-0375: dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "derivative"
+reason = "Accept temporary exception for RUSTSEC-2024-0388: dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "paste"
+reason = "Accept temporary exception for RUSTSEC-2024-0436: dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "proc-macro-error"
+reason = "Accept temporary exception for RUSTSEC-2024-0370: dev-time/cli/proc-macro; suggest exception or replacement when time permits"
+expires = "2025-12-31"
+
+# Unknown package for advisory None; manual review needed

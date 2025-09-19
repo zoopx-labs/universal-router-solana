@@ -1,0 +1,72 @@
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml
+workspace: /home/zoopx/zoopx/solana/Cargo.toml
+warning: /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml: Found `feature = ...` in `target.'cfg(...)'.dependencies`. This key is not supported for selecting dependencies and will not work as expected. Use the [features] section instead: https://doc.rust-lang.org/cargo/reference/features.html
+   Compiling zpx_router v0.1.0 (/home/zoopx/zoopx/solana/programs/zpx_router)
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `solana_program`
+  --> programs/zpx_router/tests/cpi_failure.rs:22:62
+   |
+22 | ...ram_id: &Pubkey, _accounts: &[solana_program::account_info::AccountInfo], _input: &[u8]) -> solana_sdk::entrypoint::ProgramResult {
+   |                                  ^^^^^^^^^^^^^^ use of unresolved module or unlinked crate `solana_program`
+   |
+   = help: if you wanted to use a crate named `solana_program`, use `cargo add solana_program` to add it to your `Cargo.toml`
+help: consider importing one of these modules
+   |
+3  + use anchor_lang::accounts::account_info;
+   |
+3  + use solana_sdk::account_info;
+   |
+help: if you import `account_info`, refer to it directly
+   |
+22 -     fn mock_adapter_entry(_program_id: &Pubkey, _accounts: &[solana_program::account_info::AccountInfo], _input: &[u8]) -> solana_sdk::entrypoint::ProgramResult {
+22 +     fn mock_adapter_entry(_program_id: &Pubkey, _accounts: &[account_info::AccountInfo], _input: &[u8]) -> solana_sdk::entrypoint::ProgramResult {
+   |
+
+warning: unused import: `solana_sdk::system_program`
+ --> programs/zpx_router/tests/cpi_failure.rs:7:5
+  |
+7 | use solana_sdk::system_program;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+For more information about this error, try `rustc --explain E0433`.
+warning: `zpx_router` (test "cpi_failure") generated 1 warning
+error: could not compile `zpx_router` (test "cpi_failure") due to 1 previous error; 1 warning emitted
+warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
+package:   /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml
+workspace: /home/zoopx/zoopx/solana/Cargo.toml
+warning: /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml: Found `feature = ...` in `target.'cfg(...)'.dependencies`. This key is not supported for selecting dependencies and will not work as expected. Use the [features] section instead: https://doc.rust-lang.org/cargo/reference/features.html
+   Compiling zpx_router v0.1.0 (/home/zoopx/zoopx/solana/programs/zpx_router)
+warning: unused import: `solana_sdk::system_program`
+ --> programs/zpx_router/tests/cpi_failure.rs:7:5
+  |
+7 | use solana_sdk::system_program;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: `zpx_router` (test "cpi_failure") generated 1 warning (run `cargo fix --test "cpi_failure"` to apply 1 suggestion)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 21.86s
+warning: the following packages contain code that will be rejected by a future version of Rust: solana-client v1.18.26
+note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
+     Running tests/cpi_failure.rs (target/debug/deps/cpi_failure-dcfbb5558ed1416b)
+
+running 1 test
+[2025-09-19T18:12:06.024236883Z INFO  solana_program_test] "zpx_router" builtin program
+[2025-09-19T18:12:06.024388051Z INFO  solana_program_test] "mock_cpi" builtin program
+[2025-09-19T18:12:06.236451594Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:12:06.236685945Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY invoke [1]
+[2025-09-19T18:12:06.236933243Z DEBUG solana_runtime::message_processor::stable_log] Program log: Instruction: BridgeWithAdapterCpi
+[2025-09-19T18:12:06.236995000Z DEBUG solana_runtime::message_processor::stable_log] Program MockCpi111111111111111111111111111111111111 invoke [1]
+[2025-09-19T18:12:06.237067315Z DEBUG solana_runtime::message_processor::stable_log] Program MockCpi111111111111111111111111111111111111 invoke [2]
+[2025-09-19T18:12:06.237120311Z DEBUG solana_runtime::message_processor::stable_log] Program MockCpi111111111111111111111111111111111111 invoke [2]
+[2025-09-19T18:12:06.237169149Z DEBUG solana_runtime::message_processor::stable_log] Program MockCpi111111111111111111111111111111111111 failed: custom program error: 0xdead
+[2025-09-19T18:12:06.237214375Z DEBUG solana_runtime::message_processor::stable_log] Program MockCpi111111111111111111111111111111111111 failed: custom program error: 0xdead
+[2025-09-19T18:12:06.237278543Z DEBUG solana_runtime::message_processor::stable_log] Program log: AnchorError thrown in programs/zpx_router/src/lib.rs:316. Error Code: Unauthorized. Error Number: 6000. Error Message: Unauthorized.
+[2025-09-19T18:12:06.237291610Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY failed: custom program error: 0x1770
+[2025-09-19T18:12:06.237332936Z DEBUG solana_runtime::message_processor::stable_log] Program Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY failed: custom program error: 0x1770
+test cpi_failure_propagates ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.22s
+

@@ -301,6 +301,25 @@ pub mod zpx_router {
         Ok(())
     }
 
+    // Test helper: perform a CPI to the provided adapter program. Used by program-tests
+    // to validate CPI failure handling and rollback semantics.
+    pub fn bridge_with_adapter_cpi(ctx: Context<BridgeWithAdapterCpi>) -> Result<()> {
+        // Build instruction data: adapter's `fail_now` has no args, instruction index 0
+        let ix = anchor_lang::solana_program::instruction::Instruction {
+            program_id: ctx.accounts.adapter_program.key(),
+            accounts: vec![],
+            data: vec![0u8],
+        };
+        // Perform CPI and propagate error. Pass the adapter account info so the runtime
+        // has ownership/context for the CPI.
+        anchor_lang::solana_program::program::invoke(
+            &ix,
+            &[ctx.accounts.adapter_program.to_account_info()],
+        )
+        .map_err(|_| error!(ErrorCode::Unauthorized))?;
+        Ok(())
+    }
+
     /// Destination finalize path (stateless): mark message replay and emit telemetry.
     /// No token movement. Creates a minimal PDA at [b"replay", message_hash] owned by this program.
     #[allow(clippy::too_many_arguments)]
@@ -360,14 +379,31 @@ pub mod zpx_router {
             ErrorCode::Unauthorized
         );
 
-        // If already initialized, this is a replay
-        if ctx.accounts.replay.to_account_info().lamports() > 0 {
+        // If already initialized, this is a replay. Check owner and lamports to be robust
+        // across different runtime environments (some test harnesses may not expose
+        // the same lamports semantics). If the account is already owned by this
+        // program it was initialized previously.
+        let replay_info = ctx.accounts.replay.to_account_info();
+        // Debug: log owner & lamports for diagnosis. Remove in final cleanup.
+        msg!(
+            "DEBUG replay.owner={}, lamports={}",
+            replay_info.owner,
+            replay_info.lamports()
+        );
+        if replay_info.owner == &crate::ID || replay_info.lamports() > 0 {
+            msg!(
+                "DEBUG detected replay: owner={} lamports={}",
+                replay_info.owner,
+                replay_info.lamports()
+            );
             return err!(ErrorCode::ReplayAlreadyUsed);
         }
 
-        // Create minimal PDA owned by this program to mark replay. Use rent-exempt balance to avoid rent collection.
+        // Create minimal PDA owned by this program to mark replay. Allocate 1 byte and fund
+        // with the rent-exempt minimum for 1 byte so the account has non-zero lamports and
+        // can be detected on subsequent calls (lamports > 0).
         let rent = Rent::get()?;
-        let lamports = rent.minimum_balance(0);
+        let lamports = rent.minimum_balance(1);
         system_program::create_account(
             CpiContext::new_with_signer(
                 ctx.accounts.system_program.to_account_info(),
@@ -378,7 +414,7 @@ pub mod zpx_router {
                 &[&[b"replay", &message_hash, &[bump]]],
             ),
             lamports,
-            0,
+            1,
             &crate::ID,
         )?;
 
@@ -468,6 +504,12 @@ pub struct UniversalBridgeTransfer<'info> {
     #[account(seeds=[b"zpx_config"], bump=config.bump)]
     pub config: Account<'info, Config>,
     pub token_program: Program<'info, Token>,
+}
+
+#[derive(Accounts)]
+pub struct BridgeWithAdapterCpi<'info> {
+    /// CHECK: adapter program to CPI into
+    pub adapter_program: UncheckedAccount<'info>,
 }
 
 #[derive(Accounts)]

@@ -1,0 +1,11 @@
+# Upstream required: open issue/PR to upgrade borsh in solana/anchor stack for advisory RUSTSEC-2023-0033
+
+# Upstream required: open issue/PR to upgrade curve25519-dalek in solana/anchor stack for advisory RUSTSEC-2024-0344
+
+# Upstream required: open issue/PR to upgrade ed25519-dalek in solana/anchor stack for advisory RUSTSEC-2022-0093
+
+# Try: cargo update -p ouroboros
+
+# Upstream required: open issue/PR to upgrade ring in solana/anchor stack for advisory RUSTSEC-2025-0009
+
+# Upstream required: open issue/PR to upgrade ring in solana/anchor stack for advisory RUSTSEC-2025-0010

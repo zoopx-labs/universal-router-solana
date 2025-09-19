@@ -1,0 +1,119 @@
+[
+  {
+    "advisory_id": "RUSTSEC-2021-0139",
+    "package": "ansi_term",
+    "code": "unmaintained",
+    "message": "ansi_term is Unmaintained",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2021-0139; Advisory: https://rustsec.org/advisories/RUSTSEC-2021-0139; The maintainer has advised that this crate is deprecated and will not receive any maintenance.\n\nThe crate does not seem to have much dependencies and may or may not be ok to use as-is.\n\nLast release seems to have been three years ago.\n\n## Possible Alternative(s)\n\n The below list has not been vetted in any way and may or may not contain alternatives;\n\n - [ansiterm](https://crates.io/crates/ansiterm)\n - [anstyle](https://github.com/epage/anstyle)\n - [console](https://crates.io/crates/console)\n - [nu-ansi-term](https://crates.io/crates/nu-ansi-term)\n - [owo-colors](https://crates.io/crates/owo-colors)\n - [stylish](https://crates.io/crates/stylish)\n - [yansi](https://crates.io/crates/yansi)\n\n## Dependency Specific Migration(s)\n\n - [structopt, clap2](https://github.com/clap-rs/clap/discussions/4172)",
+    "parents": "ansi_term@0.12.1"
+  },
+  {
+    "advisory_id": "RUSTSEC-2021-0145",
+    "package": "atty",
+    "code": "unsound",
+    "message": "Potential unaligned read",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2021-0145; Advisory: https://rustsec.org/advisories/RUSTSEC-2021-0145; On windows, `atty` dereferences a potentially unaligned pointer.\n\nIn practice however, the pointer won't be unaligned unless a custom global allocator is used.\n\nIn particular, the `System` allocator on windows uses `HeapAlloc`, which guarantees a large enough alignment.\n\n# atty is Unmaintained\n\nA Pull Request with a fix has been provided over a year ago but the maintainer seems to be unreachable.\n\nLast release of `atty` was almost 3 years ago.\n\n## Possible Alternative(s)\n\nThe below list has not been vetted in any way and may or may not contain alternatives;\n\n - [std::io::IsTerminal](https://doc.rust-lang.org/stable/std/io/trait.IsTerminal.html) - Stable since Rust 1.70.0\n - [is-terminal](https://crates.io/crates/is-terminal) - Standalone crate supporting Rust older than 1.70.0",
+    "parents": "atty@0.2.14"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0375",
+    "package": "atty",
+    "code": "unmaintained",
+    "message": "`atty` is unmaintained",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2024-0375; Advisory: https://rustsec.org/advisories/RUSTSEC-2024-0375; The maintainer of `atty` has [published](https://github.com/softprops/atty/commit/5bfdbe9e48c6ca6a4909e8d5b04f5e843a257e93) an official notice that the crate is no longer\nunder development, and that users should instead rely on the functionality in the standard library's [`IsTerminal`](https://doc.rust-lang.org/std/io/trait.IsTerminal.html) trait.\n\n## Alternative(s)\n\n- [std::io::IsTerminal](https://doc.rust-lang.org/stable/std/io/trait.IsTerminal.html) - Stable since Rust 1.70.0 and the recommended replacement per the `atty` maintainer.\n- [is-terminal](https://crates.io/crates/is-terminal) - Standalone crate supporting Rust older than 1.70.0",
+    "parents": "atty@0.2.14"
+  },
+  {
+    "advisory_id": "RUSTSEC-2023-0033",
+    "package": "borsh",
+    "code": "unsound",
+    "message": "Parsing borsh messages with ZST which are not-copy/clone is unsound",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2023-0033; Advisory: https://rustsec.org/advisories/RUSTSEC-2023-0033; Affected versions of borsh cause undefined behavior when zero-sized-types (ZST) \nare parsed and the Copy/Clone traits are not implemented/derived.\nFor instance if 1000 instances of a ZST are deserialized, and the ZST is not copy \n(this can be achieved through a singleton), then accessing/writing to deserialized \ndata will cause a segmentation fault.\n\nThere is currently no way for borsh to read data without also providing a Rust type. \nTherefore, if not ZST are used for serialization, then you are not affected by this issue.",
+    "parents": "borsh@0.9.3"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0344",
+    "package": "curve25519-dalek",
+    "code": "vulnerability",
+    "message": "Timing variability in `curve25519-dalek`'s `Scalar29::sub`/`Scalar52::sub`",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2024-0344; Advisory: https://rustsec.org/advisories/RUSTSEC-2024-0344; Timing variability of any kind is problematic when working with  potentially secret values such as\nelliptic curve scalars, and such issues can potentially leak private keys and other secrets. Such a\nproblem was recently discovered in `curve25519-dalek`.\n\nThe `Scalar29::sub` (32-bit) and `Scalar52::sub` (64-bit) functions contained usage of a mask value\ninside a loop where LLVM saw an opportunity to insert a branch instruction (`jns` on x86) to\nconditionally bypass this code section when the mask value is set to zero as can be seen in godbolt:\n\n- 32-bit (see L106): <https://godbolt.org/z/zvaWxzvqv>\n- 64-bit (see L48): <https://godbolt.org/z/PczYj7Pda>\n\nA similar problem was recently discovered in the Kyber reference implementation:\n\n<https://groups.google.com/a/list.nist.gov/g/pqc-forum/c/hqbtIGFKIpU/m/cnE3pbueBgAJ>\n\nAs discussed on that thread, one portable solution, which is also used in this PR, is to introduce a\nvolatile read as an optimization barrier, which prevents the compiler from optimizing it away.\n\nThe fix can be validated in godbolt here:\n\n- 32-bit: <https://godbolt.org/z/jc9j7eb8E>\n- 64-bit: <https://godbolt.org/z/x8d46Yfah>\n\nThe problem was discovered and the solution independently verified by \nAlexander Wagner <alexander.wagner@aisec.fraunhofer.de> and Lea Themint <lea.thiemt@tum.de> using\ntheir DATA tool:\n\n<https://github.com/Fraunhofer-AISEC/DATA>",
+    "parents": "curve25519-dalek@3.2.1"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0388",
+    "package": "derivative",
+    "code": "unmaintained",
+    "message": "`derivative` is unmaintained; consider using an alternative",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2024-0388; Advisory: https://rustsec.org/advisories/RUSTSEC-2024-0388; The [`derivative`](https://crates.io/crates/derivative) crate is no longer maintained.\nConsider using any alternative, for instance:\n- [derive_more](https://crates.io/crates/derive_more)\n- [derive-where](https://crates.io/crates/derive-where)\n- [educe](https://crates.io/crates/educe)",
+    "parents": "derivative@2.2.0"
+  },
+  {
+    "advisory_id": "RUSTSEC-2022-0093",
+    "package": "ed25519-dalek",
+    "code": "vulnerability",
+    "message": "Double Public Key Signing Function Oracle Attack on `ed25519-dalek`",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2022-0093; Advisory: https://rustsec.org/advisories/RUSTSEC-2022-0093; Versions of `ed25519-dalek` prior to v2.0 model private and public keys as\nseparate types which can be assembled into a `Keypair`, and also provide APIs\nfor serializing and deserializing 64-byte private/public keypairs.\n\nSuch APIs and serializations are inherently unsafe as the public key is one of\nthe inputs used in the deterministic computation of the `S` part of the signature,\nbut not in the `R` value. An adversary could somehow use the signing function as\nan oracle that allows arbitrary public keys as input can obtain two signatures\nfor the same message sharing the same `R` and only differ on the `S` part.\n\nUnfortunately, when this happens, one can easily extract the private key.\n\nRevised public APIs in v2.0 of `ed25519-dalek` do NOT allow a decoupled\nprivate/public keypair as signing input, except as part of specially labeled\n\"hazmat\" APIs which are clearly labeled as being dangerous if misused.",
+    "parents": "ed25519-dalek@1.0.1"
+  },
+  {
+    "advisory_id": "RUSTSEC-2023-0042",
+    "package": "ouroboros",
+    "code": "unsound",
+    "message": "Ouroboros is Unsound",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2023-0042; Advisory: https://rustsec.org/advisories/RUSTSEC-2023-0042; ## Summary\n\nOuroboros has a soundness problem, but a fix has been implemented in 0.16.0.\n\n## More details:\n\nIn 0.15.0, Ouroboros works internally by creating a struct where all \nuses of 'this are replaced by 'static. However, a recent addition to \nMiri checks that references passed to functions are valid during the \nentire execution of the function, even when those references are \npassed inside a struct. This poses an issue for dropping \nself-referencing values, as the reference becomes invalid during the \ndropping process. Effectively, since self-referencing structs are \nnot allowed in vanilla Rust, there is no allowance for dropping data\nduring a function that has also been given a reference to that data. \nThere's usually no way to pass a and &a to the same function.\n\nA fix was attempted, where the struct would be turned in to a raw \nbyte array and only transformed back into the underlying data type \ninside each function. This is allowable as a reference can be \ncreated and die over the body of a function, as long as the \nreference was created inside the function. However, this is also \nnot sound if the original struct contains padding. There is no \nway to initialize padding bytes to a known value that Miri will \naccept, so when it is cast to an array some of the bytes contain \nuninitialized values. This is not acceptable (despite the fact \nthat these bytes are never read) due to the potential for \noptimizations that may read from the uninitialized bytes. Besides \nwhich, this fix does not allow for template or constant parameters \nas there is no way to check the size of a templated type without \ngiving specific, concrete values for the template parameters.\n\nThe final solution was to use this fix while wrapping the raw byte\narray in `MaybeUninit<>`.",
+    "parents": "ouroboros@0.15.6"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0436",
+    "package": "paste",
+    "code": "unmaintained",
+    "message": "paste - no longer maintained",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2024-0436; Advisory: https://rustsec.org/advisories/RUSTSEC-2024-0436; The creator of the crate `paste` has stated in the [`README.md`](https://github.com/dtolnay/paste/blob/master/README.md) \nthat this project is not longer maintained as well as archived the repository\n\n## Possible Alternative(s)\n\n- [pastey](https://crates.io/crates/pastey), a fork of paste and is aimed to be a drop-in replacement with additional features for paste crate",
+    "parents": "paste@1.0.15"
+  },
+  {
+    "advisory_id": "RUSTSEC-2024-0370",
+    "package": "proc-macro-error",
+    "code": "unmaintained",
+    "message": "proc-macro-error is unmaintained",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2024-0370; Advisory: https://rustsec.org/advisories/RUSTSEC-2024-0370; proc-macro-error's maintainer seems to be unreachable, with no commits for 2 years, no releases pushed for 4 years, and no activity on the GitLab repo or response to email.\n\nproc-macro-error also depends on `syn 1.x`, which may be bringing duplicate dependencies into dependant build trees.\n\n## Possible Alternative(s)\n\n- [manyhow](https://crates.io/crates/manyhow)\n- [proc-macro-error2](https://crates.io/crates/proc-macro-error2)\n- [proc-macro2-diagnostics](https://github.com/SergioBenitez/proc-macro2-diagnostics)",
+    "parents": "proc-macro-error@1.0.4"
+  },
+  {
+    "advisory_id": "RUSTSEC-2025-0009",
+    "package": "ring",
+    "code": "vulnerability",
+    "message": "Some AES functions may panic when overflow checking is enabled.",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2025-0009; Advisory: https://rustsec.org/advisories/RUSTSEC-2025-0009; `ring::aead::quic::HeaderProtectionKey::new_mask()` may panic when overflow\nchecking is enabled. In the QUIC protocol, an attacker can induce this panic by\nsending a specially-crafted packet. Even unintentionally it is likely to occur\nin 1 out of every 2**32 packets sent and/or received.\n\nOn 64-bit targets operations using `ring::aead::{AES_128_GCM, AES_256_GCM}` may\npanic when overflow checking is enabled, when encrypting/decrypting approximately\n68,719,476,700 bytes (about 64 gigabytes) of data in a single chunk. Protocols\nlike TLS and SSH are not affected by this because those protocols break large\namounts of data into small chunks. Similarly, most applications will not\nattempt to encrypt/decrypt 64GB of data in one chunk.\n\nOverflow checking is not enabled in release mode by default, but\n`RUSTFLAGS=\"-C overflow-checks\"` or `overflow-checks = true` in the Cargo.toml\nprofile can override this. Overflow checking is usually enabled by default in\ndebug mode.",
+    "parents": "ring@0.16.20"
+  },
+  {
+    "advisory_id": "RUSTSEC-2025-0010",
+    "package": "ring",
+    "code": "unmaintained",
+    "message": "Versions of *ring* prior to 0.17 are unmaintained.",
+    "severity": "error",
+    "notes": "ID: RUSTSEC-2025-0010; Advisory: https://rustsec.org/advisories/RUSTSEC-2025-0010; *ring* 0.16.20 was released over 4 years ago and isn't maintained, tested, etc.\n\nAdditionally, the project's general policy is to only patch the latest release,\nwhich is 0.17.12 now. It will be difficult for anybody to backport future fixes\nto versions earlier than 0.17.10 due to license changes.",
+    "parents": "ring@0.16.20"
+  },
+  {
+    "advisory_id": null,
+    "package": null,
+    "code": "summary",
+    "message": "",
+    "severity": null,
+    "notes": null,
+    "parents": ""
+  }
+]

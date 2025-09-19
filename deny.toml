@@ -1,0 +1,46 @@
+# Minimal compatible cargo-deny config: bans, sources, and advisories
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+
+[sources]
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+unknown-registry = "warn"
+unknown-git = "warn"
+
+[advisories]
+ignore = []
+
+# Temporary exceptions for low-risk, dev-time or transitive crates.
+# Review cadence: triage owner should review these by the expiry date and either
+# remove the exception or replace the crate/upstream.
+[[exceptions]]
+package = "ansi_term"
+reason = "Dev-time CLI crate; accepted temporarily pending upstream ecosystem upgrades"
+owner = "security@zoopx-labs"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "atty"
+reason = "Dev-time terminal-detection crate; accepted temporarily. Consider switching to std::io::IsTerminal when updating toolchain"
+owner = "security@zoopx-labs"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "derivative"
+reason = "Dev-time proc-macro helper; accepted temporarily; consider migrate to derive_more/educe"
+owner = "security@zoopx-labs"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "paste"
+reason = "Dev-time proc-macro helper; accepted temporarily; consider replacement or fork if needed"
+owner = "security@zoopx-labs"
+expires = "2025-12-31"
+
+[[exceptions]]
+package = "proc-macro-error"
+reason = "Proc-macro helper; accepted temporarily pending upstream maintenance"
+owner = "security@zoopx-labs"
+expires = "2025-12-31"

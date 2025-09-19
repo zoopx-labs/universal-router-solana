@@ -8,6 +8,7 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
       - name: Install Rust
@@ -57,5 +58,35 @@ jobs:
       # be compatible with workspace-wide clippy.
       - name: Run unit tests (zpx_router)
         run: cargo test -p zpx_router
-      - name: Run program-tests (ignored)
-        run: cargo test -p zpx_router --features program-test -- --ignored
+
+  program-tests:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    # Integration/program-tests can be slow; give the job more time in CI
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: 1.80.0
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}-program-tests
+      - name: Run program-tests (ignored) and capture logs
+        shell: bash
+        run: |
+          mkdir -p test-logs
+          # Run program-tests with nocapture so we capture logs. Tee to a file for artifact upload.
+          cargo test -p zpx_router --features program-test -- --ignored --nocapture | tee test-logs/program-tests.txt || (cat test-logs/program-tests.txt && exit 1)
+
+      - name: Upload program-tests logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: program-tests-logs
+          path: test-logs/program-tests.txt

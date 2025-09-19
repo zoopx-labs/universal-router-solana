@@ -8,14 +8,17 @@
 use ::zpx_router as zpx_router_program;
 use ::zpx_router::hash::{keccak256, message_hash_be};
 use anchor_lang::prelude::*;
+use anchor_lang::ToAccountMetas;
 use solana_program_test::*;
+use solana_sdk::entrypoint::ProgramResult;
 use solana_sdk::{
-    signature::Keypair, signer::Signer, transaction::Transaction, transport::TransportError,
+    instruction, signature::Keypair, signer::Signer, system_instruction, system_program,
+    transaction::Transaction, transport::TransportError,
 };
 
 #[tokio::test]
 #[ignore]
-async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError> {
+async fn finalize_replay_marks_and_prevents_reuse() -> std::result::Result<(), TransportError> {
     // Inputs
     let src_chain_id = 42161u64;
     let dst_chain_id = 8453u64;
@@ -46,33 +49,53 @@ async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError
         Pubkey::find_program_address(&[b"replay", &msg_hash], &zpx_router_program::ID);
 
     // Boot a program-test environment with the router program
+    // wrapper to normalize the entry fn signature for ProgramTest expectations
+    fn entry_wrapper(program_id: &Pubkey, accounts: &[AccountInfo], input: &[u8]) -> ProgramResult {
+        // test-only shim: coerce lifetimes to match Anchor's expected signature
+        let accounts_coerced: &[AccountInfo<'_>] = unsafe { std::mem::transmute(accounts) };
+        zpx_router_program::entry(program_id, accounts_coerced, input)
+    }
+
     let program = ProgramTest::new(
         "zpx_router",
         zpx_router_program::ID,
-        processor!(zpx_router_program::entry),
+        processor!(entry_wrapper),
     );
     let mut ctx = program.start_with_context().await;
 
-    // Create a fake config account (seeded) so the finalize ix passes the config constraint
+    // Initialize the config account via the program's `initialize_config` entrypoint so Anchor
+    // correctly creates the PDA with the right owner and account data. Creating a PDA via
+    // `system_instruction::create_account` would mark the new account as a required signer
+    // (causing NotEnoughSigners), so we must use the program's init flow.
     let config_seed = b"zpx_config";
     let (config_pda, config_bump) =
         Pubkey::find_program_address(&[config_seed], &zpx_router_program::ID);
     // Create account data for config (small fixed size). We'll allocate and assign to the program.
     let rent = ctx.banks_client.get_rent().await.unwrap();
     let config_space = 8 + 32 + 32 + 8 + 2 + 1 + (32 * 8) + 1 + 1;
-    let config_lamports = rent.minimum_balance(config_space);
     let payer = &ctx.payer;
 
-    // Fund the config PDA
-    let create_cfg_ix = solana_program::system_instruction::create_account(
-        &payer.pubkey(),
-        &config_pda,
-        config_lamports,
-        config_space as u64,
-        &zpx_router_program::ID,
-    );
+    // Build and send the initialize_config instruction (program will `init` the PDA)
+    let init_accounts = zpx_router_program::accounts::InitializeConfig {
+        payer: payer.pubkey(),
+        config: config_pda,
+        system_program: system_program::id(),
+    };
+    let init_ix_data =
+        anchor_lang::InstructionData::data(&zpx_router_program::instruction::InitializeConfig {
+            admin: payer.pubkey(),
+            fee_recipient: payer.pubkey(),
+            src_chain_id,
+            relayer_fee_bps: 0u16,
+        });
+    let init_metas = init_accounts.to_account_metas(None);
+    let init_ix = instruction::Instruction {
+        program_id: zpx_router_program::ID,
+        accounts: init_metas,
+        data: init_ix_data,
+    };
     let tx = Transaction::new_signed_with_payer(
-        &[create_cfg_ix],
+        &[init_ix],
         Some(&payer.pubkey()),
         &[payer],
         ctx.last_blockhash,
@@ -82,7 +105,7 @@ async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError
     // Call finalize_message_v1
     let relayer = Keypair::new();
     // fund relayer
-    let fund_ix = solana_program::system_instruction::transfer(
+    let fund_ix = system_instruction::transfer(
         &payer.pubkey(),
         &relayer.pubkey(),
         rent.minimum_balance(0) + 1_000_000,
@@ -100,10 +123,10 @@ async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError
         relayer: relayer.pubkey(),
         config: config_pda,
         replay: replay_pda,
-        system_program: solana_program::system_program::id(),
+        system_program: system_program::id(),
     };
 
-    let ix =
+    let ix_data =
         anchor_lang::InstructionData::data(&zpx_router_program::instruction::FinalizeMessageV1 {
             src_chain_id,
             dst_chain_id,
@@ -115,10 +138,11 @@ async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError
             _initiator: initiator,
         });
     let account_metas = accounts.to_account_metas(None);
-    let instruction = solana_program::instruction::Instruction {
+    // (Debug output removed for CI stability)
+    let instruction = instruction::Instruction {
         program_id: zpx_router_program::ID,
         accounts: account_metas,
-        data: ix,
+        data: ix_data.clone(),
     };
 
     let tx = Transaction::new_signed_with_payer(
@@ -129,18 +153,58 @@ async fn finalize_replay_marks_and_prevents_reuse() -> Result<(), TransportError
     );
     ctx.banks_client.process_transaction(tx).await?;
 
-    // Fetch replay account and assert lamports >= rent.minimum_balance(0)
-    let replay_account = ctx
-        .banks_client
-        .get_account(replay_pda)
-        .await?
-        .expect("replay account missing");
-    let min = rent.minimum_balance(0);
-    assert!(replay_account.lamports >= min);
+    // Fetch replay account and assert lamports >= rent.minimum_balance(1)
+    // Poll for the replay account for a few slots to tolerate transient ledger visibility
+    let mut replay_account_opt = None;
+    for _ in 0..5u8 {
+        if let Some(acc) = ctx.banks_client.get_account(replay_pda).await? {
+            replay_account_opt = Some(acc);
+            break;
+        }
+        // Inject a tiny barrier transaction to advance slot/commit state
+        let noop_ix = system_instruction::transfer(&payer.pubkey(), &payer.pubkey(), 1);
+        let noop_tx = Transaction::new_signed_with_payer(
+            &[noop_ix],
+            Some(&payer.pubkey()),
+            &[payer],
+            ctx.last_blockhash,
+        );
+        ctx.banks_client.process_transaction(noop_tx).await?;
+    }
+    let replay_account = replay_account_opt.expect("replay account missing after retries");
+    let min = rent.minimum_balance(1);
+    assert!(
+        replay_account.lamports >= min,
+        "replay not funded as expected"
+    );
 
-    // Second call should fail with ReplayAlreadyUsed
+    // Ensure the ledger state is committed and the runtime sees the created PDA.
+    // Inject a tiny no-op transaction (transfer 1 lamport payer->payer) as a barrier.
+    let noop_ix = system_instruction::transfer(&payer.pubkey(), &payer.pubkey(), 1);
+    let noop_tx = Transaction::new_signed_with_payer(
+        &[noop_ix],
+        Some(&payer.pubkey()),
+        &[payer],
+        ctx.last_blockhash,
+    );
+    ctx.banks_client.process_transaction(noop_tx).await?;
+
+    // Second call should fail with ReplayAlreadyUsed. Rebuild the instruction so
+    // account metas are regenerated and the runtime resolves the current account state.
+    let account_metas2 = zpx_router_program::accounts::FinalizeMessageV1 {
+        relayer: relayer.pubkey(),
+        config: config_pda,
+        replay: replay_pda,
+        system_program: system_program::id(),
+    }
+    .to_account_metas(None);
+    let instruction2 = instruction::Instruction {
+        program_id: zpx_router_program::ID,
+        accounts: account_metas2,
+        data: ix_data.clone(),
+    };
     let tx2 = Transaction::new_signed_with_payer(
-        &[instruction],
+        &[instruction2],
         Some(&payer.pubkey()),
         &[payer, &relayer],
         ctx.last_blockhash,

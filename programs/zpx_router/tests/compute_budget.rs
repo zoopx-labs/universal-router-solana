@@ -6,13 +6,13 @@
 // requirements.
 #![cfg(feature = "program-test")]
 
-use anchor_lang::prelude::*;
 use solana_program_test::*;
 use solana_sdk::signature::Keypair;
 
 #[tokio::test]
 #[ignore]
-async fn compute_budget_universal_bridge_large_payload() {
+async fn compute_budget_universal_bridge_large_payload(
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     // This test creates a 512-byte payload and prepares a call to `universal_bridge_transfer`.
     // Full flow (creating mints, ATAs, and token CPIs) is intentionally left for the CI
     // runner because it requires more complex setup. The skeleton ensures the payload
@@ -22,4 +22,5 @@ async fn compute_budget_universal_bridge_large_payload() {
 
     // Further setup (mint creation, ATAs, funding) should be done by the CI runner
     // or a local developer willing to run heavy integration tests.
+    Ok(())
 }
