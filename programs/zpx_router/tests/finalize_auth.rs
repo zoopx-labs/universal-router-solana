@@ -8,8 +8,8 @@ use solana_sdk::{
     instruction,
     signature::Keypair,
     signer::Signer,
-    transaction::Transaction,
     system_program, // needed for system_program::id()
+    transaction::Transaction,
 };
 
 // Ignored heavy integration test that asserts finalize_message_v1 rejects unknown adapters

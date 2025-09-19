@@ -8,8 +8,8 @@ use solana_sdk::{
     instruction,
     signature::Keypair,
     signer::Signer,
-    transaction::Transaction,
     system_program, // for system_program::id()
+    transaction::Transaction,
 };
 
 // Simple upgrade/migration smoke test: deploy, init config, then simulate upgrade and
