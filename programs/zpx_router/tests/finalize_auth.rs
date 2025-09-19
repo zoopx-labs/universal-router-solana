@@ -4,9 +4,7 @@
 use ::zpx_router as zpx_router_program;
 use anchor_lang::prelude::*;
 use solana_program_test::*;
-use solana_sdk::{
-    instruction, signature::Keypair, signer::Signer, transaction::Transaction,
-};
+use solana_sdk::{instruction, signature::Keypair, signer::Signer, transaction::Transaction};
 
 // Ignored heavy integration test that asserts finalize_message_v1 rejects unknown adapters
 #[tokio::test]
@@ -94,8 +92,8 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
         replay: replay_pda,
         system_program: system_program::id(),
     };
-    let ix_data = anchor_lang::InstructionData::data(
-        &zpx_router_program::instruction::FinalizeMessageV1 {
+    let ix_data =
+        anchor_lang::InstructionData::data(&zpx_router_program::instruction::FinalizeMessageV1 {
             message_hash,
             src_chain_id,
             dst_chain_id,
@@ -105,8 +103,7 @@ async fn finalize_rejects_unknown_adapter() -> Result<()> {
             src_adapter,
             asset_mint,
             _initiator: initiator,
-        },
-    );
+        });
     let ix = instruction::Instruction {
         program_id: zpx_router_program::ID,
         accounts: accounts.to_account_metas(None),
