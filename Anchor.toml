@@ -1,0 +1,10 @@
+[workspace]
+members = ["programs/zpx_router", "programs/zpx_lp_vaults"]
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[programs.localnet]
+zpx_router = "Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY"
+zpx_lp_vaults = "11111111111111111111111111111111"

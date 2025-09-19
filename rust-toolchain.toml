@@ -1,0 +1,7 @@
+[toolchain]
+channel = "stable"
+components = ["rustfmt", "clippy"]
+
+# If you need to lock to a specific version that supports edition2024, replace
+# `channel = "stable"` with the concrete version tested in CI, e.g.
+# channel = "1.86.0"
