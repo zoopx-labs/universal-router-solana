@@ -4,3 +4,6 @@ target
 **/dist
 .DS_Store
 delete-later/
+secure-keys/
+# specific keys
+secure-keys/vault-program.json
