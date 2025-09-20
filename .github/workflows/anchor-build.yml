@@ -21,11 +21,10 @@ jobs:
 
       - name: Install Solana CLI
         run: |
-          curl -sSfL https://release.solana.com/v1.14.16/install | sh
-          echo "::add-path::$HOME/.local/share/solana/install/active_release/bin"
-
-      - name: Add Solana to PATH
-        run: |
+          set -euo pipefail
+          # Retry a few times in case of transient network/SSL issues
+          curl -sSfL --retry 5 --retry-delay 3 https://release.solana.com/v1.14.16/install | sh -s - v1.14.16
+          # Add solana to the PATH for subsequent steps via the supported mechanism
           echo "PATH=$HOME/.local/share/solana/install/active_release/bin:$PATH" >> $GITHUB_ENV
 
       - name: Install Rust components
