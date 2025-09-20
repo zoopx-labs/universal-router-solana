@@ -7,3 +7,8 @@ delete-later/
 secure-keys/
 # specific keys
 secure-keys/vault-program.json
+# ignore temporary cargo target used for local checks
+target_tmp/
+# ignore downloaded actions logs
+actions_run_*_logs.zip
+actions_run_logs.zip
