@@ -6,5 +6,5 @@ cluster = "localnet"
 wallet = "~/.config/solana/id.json"
 
 [programs.localnet]
-zpx_router = "Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY"
+zpx_router = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
 zpx_lp_vaults = "11111111111111111111111111111111"

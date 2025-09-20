@@ -12,7 +12,8 @@ use anchor_lang::solana_program::{
 use anchor_lang::Discriminator;
 use hash::{global_route_id, keccak256, message_hash_be};
 
-declare_id!("Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY");
+// Updated to use vault-program.json derived pubkey
+declare_id!("zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz");
 
 const FEE_CAP_BPS: u16 = 5; // protocol fee cap (0.05%)
 const RELAYER_FEE_CAP_BPS: u16 = 1000; // relayer fee cap (10%) – adjustable in config
