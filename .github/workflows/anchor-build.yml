@@ -43,11 +43,14 @@ jobs:
             target
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Install Anchor CLI (via cargo)
+      - name: Install Anchor CLI (build from repo)
         run: |
-          # Install Anchor CLI from the canonical repo and tag
-          cargo install --git https://github.com/coral-xyz/anchor --tag v0.31.1 --bin anchor-cli --locked || true
-          anchor --version || true
+          set -euo pipefail
+          # Clone the canonical Anchor repo and install the 'anchor' binary from the cli path
+          ANCHOR_TAG=v0.31.1
+          git clone --depth 1 --branch "$ANCHOR_TAG" https://github.com/coral-xyz/anchor /tmp/anchor
+          cargo install --path /tmp/anchor/cli --bin anchor --locked
+          anchor --version
 
       - name: Lint & Test (fast checks)
         run: |
