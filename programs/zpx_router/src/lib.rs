@@ -2,8 +2,14 @@
 #![allow(unexpected_cfgs)]
 #![forbid(unsafe_code)]
 #![deny(unused_must_use)]
+// Allow some clippy lints at the crate level to keep the program ergonomic for
+// now (many public entrypoints are long and Anchor's Result carries a large
+// error type). These are deliberate tradeoffs for readability in this repo.
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::result_large_err)]
+#![allow(clippy::field_reassign_with_default)]
 use anchor_lang::prelude::*;
-use anchor_spl::token::{self as token, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::{self as token, Mint, Token, TokenAccount};
 
 // Minimal internal hash helpers (stubbed for tests). In later phases replace with
 // a proper keccak implementation matching the production spec.

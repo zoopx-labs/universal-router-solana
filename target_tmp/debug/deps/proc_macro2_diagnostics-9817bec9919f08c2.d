@@ -1,0 +1,10 @@
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/proc_macro2_diagnostics-9817bec9919f08c2.d: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/ext.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/diagnostic.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/line.rs
+
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/libproc_macro2_diagnostics-9817bec9919f08c2.rlib: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/ext.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/diagnostic.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/line.rs
+
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/libproc_macro2_diagnostics-9817bec9919f08c2.rmeta: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/ext.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/diagnostic.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/line.rs
+
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/lib.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/ext.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/diagnostic.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/proc-macro2-diagnostics-0.9.1/src/line.rs:

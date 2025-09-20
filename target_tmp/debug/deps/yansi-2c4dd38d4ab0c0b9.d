@@ -1,0 +1,12 @@
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/yansi-2c4dd38d4ab0c0b9.d: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/libyansi-2c4dd38d4ab0c0b9.rlib: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/home/zoopx/zoopx/solana/target_tmp/debug/deps/libyansi-2c4dd38d4ab0c0b9.rmeta: /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs /home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs
+
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/lib.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/macros.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/windows.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/paint.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/style.rs:
+/home/zoopx/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/yansi-0.5.1/src/color.rs:
