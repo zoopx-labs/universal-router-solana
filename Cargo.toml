@@ -2,7 +2,6 @@
 members = [
 	"programs/zpx_router",
 	"programs/zpx_lp_vaults",
-	"tools/generate_golden_vectors",
 ]
 resolver = "2"
 
@@ -12,4 +11,3 @@ lto = "fat"
 codegen-units = 1
 panic = "abort"
 incremental = false
-strip = "symbols"

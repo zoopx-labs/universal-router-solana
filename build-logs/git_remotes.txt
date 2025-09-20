@@ -1,2 +1,0 @@
-origin	https://github.com/zoopx-labs/universal-router-solana.git (fetch)
-origin	https://github.com/zoopx-labs/universal-router-solana.git (push)

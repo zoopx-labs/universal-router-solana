@@ -1,0 +1,9 @@
+[programs.localnet]
+zpx_router = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
+
+[provider]
+cluster = "localnet"
+wallet = "~/.config/solana/id.json"
+
+[build]
+rust = "stable"

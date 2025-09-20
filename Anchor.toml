@@ -1,10 +1,28 @@
-[workspace]
-members = ["programs/zpx_router", "programs/zpx_lp_vaults"]
+[programs.localnet][workspace]
 
-[provider]
-cluster = "localnet"
-wallet = "~/.config/solana/id.json"
+universal_router_sol = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"members = ["programs/zpx_router", "programs/zpx_lp_vaults"]
 
-[programs.localnet]
-zpx_router = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
-zpx_lp_vaults = "11111111111111111111111111111111"
+
+
+[registry][provider]
+
+# Build artifacts path (Anchor default) - can be adjusted in CIcluster = "localnet"
+
+idl = "target/idl"wallet = "~/.config/solana/id.json"
+
+
+
+[provider][programs.localnet]
+
+cluster = "localnet"zpx_router = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
+
+wallet = "~/.config/solana/id.json"zpx_lp_vaults = "11111111111111111111111111111111"
+
+
+[build]
+# Rust configuration; ensure SBF target is pinned in CI
+rust = "stable"
+
+[programs.devnet]
+# placeholder for devnet program id if you deploy to devnet
+universal_router_sol = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"

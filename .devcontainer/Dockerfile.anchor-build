@@ -1,0 +1,30 @@
+# Development container variant for use with VS Code Remote - Reuse the same anchor build image
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential curl git ca-certificates pkg-config libssl-dev libudev-dev \
+    llvm clang cmake make python3 python3-pip unzip wget zlib1g-dev jq gnupg2 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Create non-root user
+ARG ANCHOR_USER=vscode
+ARG ANCHOR_UID=1000
+RUN useradd -m -u ${ANCHOR_UID} ${ANCHOR_USER}
+USER ${ANCHOR_USER}
+ENV HOME=/home/${ANCHOR_USER}
+WORKDIR ${HOME}
+
+ENV PATH=${HOME}/.local/share/solana/install/active_release/bin:${HOME}/.cargo/bin:${PATH}
+ENV SOLANA_VERSION=1.14.16
+RUN curl -sSfL https://release.solana.com/v${SOLANA_VERSION}/install | sh
+
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH=${HOME}/.cargo/bin:${PATH}
+RUN rustup default stable
+RUN rustup component add rustfmt clippy
+
+RUN cargo install --locked --git https://github.com/coral-xyz/anchor --tag v0.31.1 --bin anchor-cli || true
+
+WORKDIR /workspace
+ENTRYPOINT ["/bin/bash"]

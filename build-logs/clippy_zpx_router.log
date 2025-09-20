@@ -1,9 +1,0 @@
-warning: profiles for the non root package will be ignored, specify profiles at the workspace root:
-package:   /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml
-workspace: /home/zoopx/zoopx/solana/Cargo.toml
-warning: /home/zoopx/zoopx/solana/programs/zpx_router/Cargo.toml: Found `feature = ...` in `target.'cfg(...)'.dependencies`. This key is not supported for selecting dependencies and will not work as expected. Use the [features] section instead: https://doc.rust-lang.org/cargo/reference/features.html
-    Checking zpx_router v0.1.0 (/home/zoopx/zoopx/solana/programs/zpx_router)
-    Finished `dev` profile [unoptimized + debuginfo] target(s) in 2.46s
-warning: the following packages contain code that will be rejected by a future version of Rust: solana-client v1.18.26
-note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
-CLIPPY_EXIT:$?

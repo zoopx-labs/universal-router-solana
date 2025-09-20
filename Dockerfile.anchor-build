@@ -1,0 +1,49 @@
+# Reproducible Anchor build image
+# Builds Anchor (CLI + SBF toolchain) and provides a workspace where you can run `anchor build`.
+
+FROM ubuntu:22.04
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install system deps for Rust, Solana SBF build, and Anchor
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends \
+    build-essential curl git ca-certificates pkg-config libssl-dev libudev-dev \
+    llvm clang cmake make python3 python3-pip unzip wget zlib1g-dev jq gnupg2 \
+  && rm -rf /var/lib/apt/lists/*
+
+# Create a non-root user to avoid permission issues when mounting host workspace
+ARG ANCHOR_USER=anchor
+ARG ANCHOR_UID=1000
+RUN useradd -m -u ${ANCHOR_UID} ${ANCHOR_USER}
+USER ${ANCHOR_USER}
+ENV HOME=/home/${ANCHOR_USER}
+WORKDIR ${HOME}
+
+# Add cargo bin and solana to PATH (solana will be installed to ~/.local/share/solana)
+ENV PATH=${HOME}/.local/share/solana/install/active_release/bin:${HOME}/.cargo/bin:${PATH}
+
+# Install Solana CLI (pin version)
+ENV SOLANA_VERSION=1.14.16
+RUN curl -sSfL https://release.solana.com/v${SOLANA_VERSION}/install | sh
+
+# Install rustup and Rust toolchain
+RUN curl https://sh.rustup.rs -sSf | sh -s -- -y
+ENV PATH=${HOME}/.cargo/bin:${PATH}
+RUN rustup default stable
+RUN rustup component add rustfmt clippy
+
+# Install Anchor CLI from repo tag (pin tag). This installs `anchor-cli` binary.
+# Using `cargo install --git` ensures a reproducible build tied to a tag.
+ENV CARGO_INSTALL_ROOT=/home/${ANCHOR_USER}/.cargo
+ENV CARGO_TARGET_DIR=/tmp/cargo-install
+# Install the 'anchor' binary from the anchor repo tag. Use --bin anchor to select the proper binary.
+# If installation fails, print the cargo install target dir for diagnostics.
+RUN git clone --depth 1 --branch v0.31.1 https://github.com/coral-xyz/anchor /tmp/anchor \
+  && cargo install --locked --path /tmp/anchor/cli --bin anchor || \
+    (echo "cargo install anchor (from cloned repo) failed, listing ${CARGO_TARGET_DIR}" && ls -la ${CARGO_TARGET_DIR} || true)
+
+# Workdir for mounting the repo
+WORKDIR /workspace
+
+# Default entry - interactive shell
+ENTRYPOINT ["/bin/bash"]
