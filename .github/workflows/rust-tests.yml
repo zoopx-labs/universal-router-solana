@@ -33,8 +33,15 @@ jobs:
       - name: Check formatting
         run: cargo fmt --all -- --check
 
-      - name: Run clippy
-        run: cargo clippy -p zpx_router -p zpx_adapter -- -D warnings
+      - name: Run clippy (zpx_router)
+        run: |
+          cd programs/zpx_router
+          cargo clippy --all-targets -- -D warnings
+
+      - name: Run clippy (zpx_adapter)
+        run: |
+          cd programs/zpx_adapter
+          cargo clippy --all-targets -- -D warnings
 
   adapter-tests:
     name: Adapter tests
@@ -60,7 +67,7 @@ jobs:
           components: clippy,rustfmt
 
       - name: Run adapter tests
-        run: cargo test -p zpx_adapter -- --nocapture
+        run: cargo test --manifest-path programs/zpx_adapter/Cargo.toml --tests -- --nocapture
 
   router-tests:
     name: Router tests
@@ -86,4 +93,4 @@ jobs:
           components: clippy,rustfmt
 
       - name: Run router tests
-        run: cargo test -p zpx_router -- --nocapture
+        run: cargo test --manifest-path programs/zpx_router/Cargo.toml --tests -- --nocapture
