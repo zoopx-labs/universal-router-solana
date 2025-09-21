@@ -1,0 +1,144 @@
+name: Deploy to Devnet (Anchor)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Build & Deploy to Devnet
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          profile: minimal
+          override: true
+
+      - name: Install solana CLI
+        run: |
+          set -euo pipefail
+          curl -sSfL https://release.solana.com/v1.18.26/install/solana-install-init.sh | sh -s - v1.18.26
+          echo "::add-path::$HOME/.local/share/solana/install/active_release/bin"
+
+      - name: Install python base58
+        run: |
+          python3 -m pip install --user base58
+
+      - name: Install anchor-cli
+        run: |
+          set -euo pipefail
+          # Install anchor-cli that matches anchor-lang v0.26.0 used by the repo
+          cargo install --locked --git https://github.com/coral-xyz/anchor --tag v0.26.0 anchor-cli
+
+      - name: Prepare deploy keypair from secret (supports JSON / base58 / hex / gpg)
+        env:
+          DEPLOYER_PK: ${{ secrets.DEPLOYER_PK }}
+          DEPLOYER_PK_ENCODING: ${{ secrets.DEPLOYER_PK_ENCODING }} # optional: json|base58|hex|gpg (default json)
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }} # optional, used only if encoding=gpg
+        run: |
+          set -euo pipefail
+          export DEPLOYER_PK="${DEPLOYER_PK}"
+          export DEPLOYER_PK_ENCODING="${DEPLOYER_PK_ENCODING:-json}"
+          export GPG_PASSPHRASE="${GPG_PASSPHRASE:-}"
+          chmod +x scripts/deploy_key_prepare.sh scripts/update_anchor_toml.py
+          /bin/bash scripts/deploy_key_prepare.sh
+
+      - name: Validate deploy keypair pubkey
+        env:
+          EXPECTED_DEPLOYER_PUBKEY: ${{ secrets.EXPECTED_DEPLOYER_PUBKEY }}
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          ACTUAL_PUB=$(solana-keygen pubkey $HOME/.config/solana/deployer.json)
+          echo "Derived deployer pubkey: $ACTUAL_PUB"
+          if [ -n "${EXPECTED_DEPLOYER_PUBKEY:-}" ]; then
+            if [ "$ACTUAL_PUB" != "$EXPECTED_DEPLOYER_PUBKEY" ]; then
+              echo "Deployer pubkey mismatch: expected $EXPECTED_DEPLOYER_PUBKEY, got $ACTUAL_PUB" >&2
+              exit 1
+            fi
+          else
+            # fallback to the known pubkey you shared earlier
+            if [ "$ACTUAL_PUB" != "7iWDd7GLkeCtDHJerXpzdrvsTLc8MXtJAvM1UT3hW7fE" ]; then
+              echo "Deployer pubkey does not match expected 7iWDd7GLkeCtDHJerXpzdrvsTLc8MXtJAvM1UT3hW7fE; failing." >&2
+              exit 1
+            fi
+          fi
+
+      - name: Configure Solana for devnet
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          solana --version
+          solana config set --url https://api.devnet.solana.com --keypair $HOME/.config/solana/deployer.json
+
+      - name: Anchor build
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          # Build all Anchor programs in the workspace
+          anchor build
+
+      - name: Upload Anchor IDLs
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: anchor-idl
+          path: |
+            target/idl
+            programs/*/target/idl
+
+      - name: Deploy program to devnet
+        id: deploy
+        run: |
+          set -euo pipefail
+          export PATH="$HOME/.local/share/solana/install/active_release/bin:$PATH"
+          # locate the built program .so; common paths are target/deploy/<name>.so or programs/<pkg>/target/deploy/<name>.so
+          PROGRAM_SO=target/deploy/zpx_router.so
+          if [ ! -f "$PROGRAM_SO" ]; then
+            PROGRAM_SO=programs/zpx_router/target/deploy/zpx_router.so
+          fi
+          if [ ! -f "$PROGRAM_SO" ]; then
+            echo "Could not find built program .so at expected locations" >&2
+            exit 1
+          fi
+          solana program deploy "$PROGRAM_SO" --keypair "$HOME/.config/solana/deployer.json" --url https://api.devnet.solana.com --output json > deploy.json
+          cat deploy.json
+          # extract program id if present
+          if command -v jq >/dev/null 2>&1; then
+            jq -r '.programId' deploy.json > program_id.txt || true
+            echo "Deployed program id: $(cat program_id.txt)"
+          else
+            echo "Install jq to parse deploy output; deploy.json saved." >&2
+          fi
+
+      - name: Create PR updating Anchor.toml with new devnet program id
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ ! -f program_id.txt ]; then
+            echo "program_id.txt not found, skipping Anchor.toml update" >&2
+            exit 0
+          fi
+          prog=$(cat program_id.txt)
+          echo "Updating Anchor.toml with program id: $prog" >&2
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b update/devnet-program-id || true
+          python3 scripts/update_anchor_toml.py "$prog"
+          git add Anchor.toml
+          git commit -m "chore: update devnet program id to $prog" || true
+          git push --set-upstream origin update/devnet-program-id
+          if command -v gh >/dev/null 2>&1; then
+            gh pr create --title "Update devnet program id" --body "Updates Anchor.toml with deployed program id $prog" --base main --head update/devnet-program-id
+          else
+            echo "Branch pushed: update/devnet-program-id. Create a PR to merge it into main." >&2
+          fi
