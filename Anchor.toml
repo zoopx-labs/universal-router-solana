@@ -5,8 +5,11 @@ members = ["programs/zpx_router", "programs/zpx_lp_vaults"]
 universal_router_sol = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
 
 [programs.devnet]
-# placeholder for devnet program id if you deploy to devnet
-universal_router_sol = "zoopxFVyJcE2LAcMqDnKjWx9jv7UWDkDvqviVVypVPz"
+# Devnet program id used for deployment/smoke tests. Replace with the pubkey
+# extracted from the deployer keypair JSON you will use (see docs/PHASE2_README.md).
+universal_router_sol = "Adx7Rd5zT1fRiTfat69nf3snARTHECvdqFGkirStpQdY"
+# The deployer keypair we validated is secure-keys/ZPXhajNNajSB4AYQMBqZajugyhDVqJPgD9CaRczBQMZ.json
+# pubkey: ZPXhajNNajSB4AYQMBqZajugyhDVqJPgD9CaRczBQMZ
 
 [registry]
 # Build artifacts path (Anchor default) - can be adjusted in CI

@@ -1,0 +1,18 @@
+[package]
+name = "zpx_adapter"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+anchor-lang = { version = "0.27.0", features = ["init-if-needed"] }
+
+[dev-dependencies]
+solana-program-test = "1.18.26"
+tokio = { version = "1.41", features = ["macros", "rt"] }
+solana-program = "1.18.26"
+solana-sdk = "1.18.26"
+
+

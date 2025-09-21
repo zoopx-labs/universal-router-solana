@@ -1,6 +1,9 @@
 [workspace]
 members = [
 	"programs/zpx_router",
+	"programs/zpx_adapter",
+	"programs/zpx_adapter_cctp_v1",
+	"programs/zpx_adapter_cctp_v2",
 	"programs/zpx_lp_vaults",
 ]
 resolver = "2"

@@ -12,6 +12,16 @@ crate-type = ["cdylib", "lib"]
 anchor-lang = "0.26.0"
 anchor-spl = "0.26.0"
 solana-program = "1.14.16"
+spl-token = "3.5.0"
+
 
 [features]
 default = []
+
+[dev-dependencies]
+solana-program-test = "1.18.26"
+solana-sdk = "1.18.26"
+tokio = { version = "1.28", features = ["macros", "rt-multi-thread"] }
+spl-token = "3.5.0"
+zpx_adapter_cctp_v1 = { path = "../zpx_adapter_cctp_v1" }
+zpx_adapter_cctp_v2 = { path = "../zpx_adapter_cctp_v2" }
